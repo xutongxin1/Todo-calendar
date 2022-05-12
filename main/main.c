@@ -2,9 +2,9 @@
  * @Author: xtx
  * @Date: 2022-05-09 23:14:36
  * @LastEditors: xtx
- * @LastEditTime: 2022-05-11 21:58:59
+ * @LastEditTime: 2022-05-12 00:53:00
  * @FilePath: /template-app/main/main.c
- * @Description: ÇëÌîĞ´¼ò½é
+ * @Description: è¯·å¡«å†™ç®€ä»‹
  */
 #include <stdio.h>
 #include <string.h>
@@ -74,7 +74,7 @@ void Uart_init(void)
     uart_driver_install(UART_NUM_1, BUF_SIZE * 2, 0, 0, NULL, 0);
     ESP_LOGI(TAG, "Uart1 Prepare in GPIO6_TX GPIO7_RX");
 
-    // char test[100] = "t6.txt=\"½ñÌìÌìÆøÊÇÏÂÓêÄØQAQ\"";
+    // char test[100] = "t6.txt=\"ä»Šå¤©å¤©æ°”æ˜¯ä¸‹é›¨å‘¢QAQ\"";
     uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
     // uart_write_bytes(UART_NUM_1, test, strlen(test));
     // uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
@@ -86,7 +86,7 @@ static void GetAeecssCode(void *pvParameters)
 {
     esp_http_client_config_t config;
     memset(&config, 0, sizeof(config));
-    //ÏòÅäÖÃ½á¹¹ÌåÄÚ²¿Ğ´Èëurl
+    //å‘é…ç½®ç»“æ„ä½“å†…éƒ¨å†™å…¥url
     config.buffer_size_tx = 4096;
     config.buffer_size = 4096;
     static const char *URL = "https://login.microsoftonline.com/c2e34095-aca9-442b-9f55-6256fc452083/oauth2/v2.0/token";
@@ -94,10 +94,10 @@ static void GetAeecssCode(void *pvParameters)
     config.host = "login.microsoftonline.com";
     // config.path = "/c2e34095-aca9-442b-9f55-6256fc452083/oauth2/v2.0/token";
 
-    //³õÊ¼»¯½á¹¹Ìå
-    esp_http_client_handle_t client = esp_http_client_init(&config); //³õÊ¼»¯httpÁ¬½Ó
+    //åˆå§‹åŒ–ç»“æ„ä½“
+    esp_http_client_handle_t client = esp_http_client_init(&config); //åˆå§‹åŒ–httpè¿æ¥
 
-    //ÉèÖÃ·¢ËÍÇëÇó
+    //è®¾ç½®å‘é€è¯·æ±‚
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     esp_http_client_set_header(client, "Content-Type", "application/x-www-form-urlencoded");
     //esp_http_client_set_header(client, "Host", "login.microsoftonline.com");
@@ -109,12 +109,12 @@ static void GetAeecssCode(void *pvParameters)
     while (1)
     {
 
-        // ÓëÄ¿±êÖ÷»ú´´½¨Á¬½Ó£¬²¢ÇÒÉùÃ÷Ğ´ÈëÄÚÈİ³¤¶ÈÎª0
-        //ÒòÎªÈç¹ûÊÇpostÇëÇó£¬»áÔÚ±¨ÎÄµÄÍ·²¿ºóÃæ¸ú×ÅÒªÏò·şÎñÆ÷·¢ËÍµÄÊı¾İ
-        //¶ø¶ÔÓÚget·½·¨£¬·¢ËÍµÄÄÚÈİ¶¼ÔÚURLÀïÃæ£¬¶¼ÔÚ±¨ÎÄÍ·²¿£¬²»ĞèÒª¶¨ÒåºóÃæµÄ²¿·Ö£¬Òò´ËĞ´Èë³¤¶È¾ÍÊÇ0
+        // ä¸ç›®æ ‡ä¸»æœºåˆ›å»ºè¿æ¥ï¼Œå¹¶ä¸”å£°æ˜å†™å…¥å†…å®¹é•¿åº¦ä¸º0
+        //å› ä¸ºå¦‚æœæ˜¯postè¯·æ±‚ï¼Œä¼šåœ¨æŠ¥æ–‡çš„å¤´éƒ¨åé¢è·Ÿç€è¦å‘æœåŠ¡å™¨å‘é€çš„æ•°æ®
+        //è€Œå¯¹äºgetæ–¹æ³•ï¼Œå‘é€çš„å†…å®¹éƒ½åœ¨URLé‡Œé¢ï¼Œéƒ½åœ¨æŠ¥æ–‡å¤´éƒ¨ï¼Œä¸éœ€è¦å®šä¹‰åé¢çš„éƒ¨åˆ†ï¼Œå› æ­¤å†™å…¥é•¿åº¦å°±æ˜¯0
         esp_err_t err = esp_http_client_open(client, strlen(post_data));
         // esp_err_t err = esp_http_client_perform(client);
-        //Èç¹ûÁ¬½ÓÊ§°Ü
+        //å¦‚æœè¿æ¥å¤±è´¥
         if (err != ESP_OK)
         {
             ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
@@ -125,7 +125,7 @@ static void GetAeecssCode(void *pvParameters)
                 esp_restart();
             }
         }
-        //Èç¹ûÁ¬½Ó³É¹¦
+        //å¦‚æœè¿æ¥æˆåŠŸ
         else
         {
             errorTime = 0;
@@ -178,56 +178,56 @@ static void GetWeather(void *pvParameters)
 {
     esp_http_client_config_t config;
     memset(&config, 0, sizeof(config));
-    //ÏòÅäÖÃ½á¹¹ÌåÄÚ²¿Ğ´Èëurl
-    static const char *URL = "https://api.seniverse.com/v3/weather/now.json?key=Suo-L-0OoOH2-YLPj&location=beijing&language=zh-Hans&unit=c";
+    //å‘é…ç½®ç»“æ„ä½“å†…éƒ¨å†™å…¥url
+    static const char *URL = "https://api.seniverse.com/v3/weather/now.json?key=Suo-L-0OoOH2-YLPj&location=guangzhou&language=zh-Hans&unit=c";
     config.url = URL;
 
-    //³õÊ¼»¯½á¹¹Ìå
-    esp_http_client_handle_t client = esp_http_client_init(&config); //³õÊ¼»¯httpÁ¬½Ó
+    //åˆå§‹åŒ–ç»“æ„ä½“
+    esp_http_client_handle_t client = esp_http_client_init(&config); //åˆå§‹åŒ–httpè¿æ¥
 
-    //ÉèÖÃ·¢ËÍÇëÇó
+    //è®¾ç½®å‘é€è¯·æ±‚
     esp_http_client_set_method(client, HTTP_METHOD_GET);
     char output_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
     int content_length = 0;
     while (1)
     {
 
-        // ÓëÄ¿±êÖ÷»ú´´½¨Á¬½Ó£¬²¢ÇÒÉùÃ÷Ğ´ÈëÄÚÈİ³¤¶ÈÎª0
-        //ÒòÎªÈç¹ûÊÇpostÇëÇó£¬»áÔÚ±¨ÎÄµÄÍ·²¿ºóÃæ¸ú×ÅÒªÏò·şÎñÆ÷·¢ËÍµÄÊı¾İ
-        //¶ø¶ÔÓÚget·½·¨£¬·¢ËÍµÄÄÚÈİ¶¼ÔÚURLÀïÃæ£¬¶¼ÔÚ±¨ÎÄÍ·²¿£¬²»ĞèÒª¶¨ÒåºóÃæµÄ²¿·Ö£¬Òò´ËĞ´Èë³¤¶È¾ÍÊÇ0
+        // ä¸ç›®æ ‡ä¸»æœºåˆ›å»ºè¿æ¥ï¼Œå¹¶ä¸”å£°æ˜å†™å…¥å†…å®¹é•¿åº¦ä¸º0
+        //å› ä¸ºå¦‚æœæ˜¯postè¯·æ±‚ï¼Œä¼šåœ¨æŠ¥æ–‡çš„å¤´éƒ¨åé¢è·Ÿç€è¦å‘æœåŠ¡å™¨å‘é€çš„æ•°æ®
+        //è€Œå¯¹äºgetæ–¹æ³•ï¼Œå‘é€çš„å†…å®¹éƒ½åœ¨URLé‡Œé¢ï¼Œéƒ½åœ¨æŠ¥æ–‡å¤´éƒ¨ï¼Œä¸éœ€è¦å®šä¹‰åé¢çš„éƒ¨åˆ†ï¼Œå› æ­¤å†™å…¥é•¿åº¦å°±æ˜¯0
         esp_err_t err = esp_http_client_open(client, 0);
 
-        //Èç¹ûÁ¬½ÓÊ§°Ü
+        //å¦‚æœè¿æ¥å¤±è´¥
         if (err != ESP_OK)
         {
             ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
         }
-        //Èç¹ûÁ¬½Ó³É¹¦
+        //å¦‚æœè¿æ¥æˆåŠŸ
         else
         {
 
-            //¶ÁÈ¡Ä¿±êÖ÷»úµÄ·µ»ØÄÚÈİµÄĞ­ÒéÍ·
+            //è¯»å–ç›®æ ‡ä¸»æœºçš„è¿”å›å†…å®¹çš„åè®®å¤´
             content_length = esp_http_client_fetch_headers(client);
 
-            //Èç¹ûĞ­ÒéÍ·³¤¶ÈĞ¡ÓÚ0£¬ËµÃ÷Ã»ÓĞ³É¹¦¶ÁÈ¡µ½
+            //å¦‚æœåè®®å¤´é•¿åº¦å°äº0ï¼Œè¯´æ˜æ²¡æœ‰æˆåŠŸè¯»å–åˆ°
             if (content_length < 0)
             {
                 ESP_LOGE(TAG, "HTTP client fetch headers failed");
             }
 
-            //Èç¹û³É¹¦¶ÁÈ¡µ½ÁËĞ­ÒéÍ·
+            //å¦‚æœæˆåŠŸè¯»å–åˆ°äº†åè®®å¤´
             else
             {
 
-                //¶ÁÈ¡Ä¿±êÖ÷»úÍ¨¹ıhttpµÄÏìÓ¦ÄÚÈİ
+                //è¯»å–ç›®æ ‡ä¸»æœºé€šè¿‡httpçš„å“åº”å†…å®¹
                 int data_read = esp_http_client_read_response(client, output_buffer, MAX_HTTP_OUTPUT_BUFFER);
                 if (data_read >= 0)
                 {
 
-                    //´òÓ¡ÏìÓ¦ÄÚÈİ£¬°üÀ¨ÏìÓ¦×´Ì¬£¬ÏìÓ¦Ìå³¤¶È¼°ÆäÄÚÈİ
+                    //æ‰“å°å“åº”å†…å®¹ï¼ŒåŒ…æ‹¬å“åº”çŠ¶æ€ï¼Œå“åº”ä½“é•¿åº¦åŠå…¶å†…å®¹
                     ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d",
-                             esp_http_client_get_status_code(client),     //»ñÈ¡ÏìÓ¦×´Ì¬ĞÅÏ¢
-                             esp_http_client_get_content_length(client)); //»ñÈ¡ÏìÓ¦ĞÅÏ¢³¤¶È
+                             esp_http_client_get_status_code(client),     //è·å–å“åº”çŠ¶æ€ä¿¡æ¯
+                             esp_http_client_get_content_length(client)); //è·å–å“åº”ä¿¡æ¯é•¿åº¦
                     printf("data:%s\r\n", output_buffer);
                     cJSON *root = NULL;
                     root = cJSON_Parse(output_buffer);
@@ -243,7 +243,7 @@ static void GetWeather(void *pvParameters)
                         // printf("%s\n", cjson_weather->valuestring);
                         //if(text)
                         char command[100] = "";
-                        sprintf(command, "t6.txt=\"½ñÌìÌìÆøÊÇ%sÄØ\nÆøÎÂÊÇ%s¶ÈÈö\"", cjson_weather->valuestring, cjson_temperature->valuestring);
+                        sprintf(command, "t6.txt=\"ä»Šå¤©å¤©æ°”æ˜¯%så‘¢\næ°”æ¸©æ˜¯%såº¦æ’’\"", cjson_weather->valuestring, cjson_temperature->valuestring);
                         uart_write_bytes(UART_NUM_1, command, strlen(command));
                         uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
 
@@ -252,7 +252,7 @@ static void GetWeather(void *pvParameters)
                         break;
                     }
                 }
-                //Èç¹û²»³É¹¦
+                //å¦‚æœä¸æˆåŠŸ
                 else
                 {
                     ESP_LOGE(TAG, "Failed to read response");
@@ -268,16 +268,16 @@ static void GetTask(void *pvParameters)
 {
     esp_http_client_config_t config;
     memset(&config, 0, sizeof(config));
-    //ÏòÅäÖÃ½á¹¹ÌåÄÚ²¿Ğ´Èëurl
+    //å‘é…ç½®ç»“æ„ä½“å†…éƒ¨å†™å…¥url
     config.buffer_size_tx = 4096;
     config.buffer_size = 2048;
     static const char *URL = "https://graph.microsoft.com/v1.0/me/todo/lists/AQMkAGFmYjhjNWNiLTA0YmMtNGZiZC05ZGMxLTMwM2I1ODNkMWE5YwAuAAADuNMsdt9ULkG68AWXdu9SlgEAzPKXK_YW5UibTHO5BXCzowAAAgESAAAA/tasks";
     config.url = URL;
 
-    //³õÊ¼»¯½á¹¹Ìå
-    esp_http_client_handle_t client = esp_http_client_init(&config); //³õÊ¼»¯httpÁ¬½Ó
+    //åˆå§‹åŒ–ç»“æ„ä½“
+    esp_http_client_handle_t client = esp_http_client_init(&config); //åˆå§‹åŒ–httpè¿æ¥
 
-    //ÉèÖÃ·¢ËÍÇëÇó
+    //è®¾ç½®å‘é€è¯·æ±‚
     esp_http_client_set_method(client, HTTP_METHOD_GET);
     esp_http_client_set_header(client, "Authorization", info.AccessCode);
     char output_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
@@ -286,12 +286,12 @@ static void GetTask(void *pvParameters)
     while (1)
     {
 
-        // ÓëÄ¿±êÖ÷»ú´´½¨Á¬½Ó£¬²¢ÇÒÉùÃ÷Ğ´ÈëÄÚÈİ³¤¶ÈÎª0
-        //ÒòÎªÈç¹ûÊÇpostÇëÇó£¬»áÔÚ±¨ÎÄµÄÍ·²¿ºóÃæ¸ú×ÅÒªÏò·şÎñÆ÷·¢ËÍµÄÊı¾İ
-        //¶ø¶ÔÓÚget·½·¨£¬·¢ËÍµÄÄÚÈİ¶¼ÔÚURLÀïÃæ£¬¶¼ÔÚ±¨ÎÄÍ·²¿£¬²»ĞèÒª¶¨ÒåºóÃæµÄ²¿·Ö£¬Òò´ËĞ´Èë³¤¶È¾ÍÊÇ0
+        // ä¸ç›®æ ‡ä¸»æœºåˆ›å»ºè¿æ¥ï¼Œå¹¶ä¸”å£°æ˜å†™å…¥å†…å®¹é•¿åº¦ä¸º0
+        //å› ä¸ºå¦‚æœæ˜¯postè¯·æ±‚ï¼Œä¼šåœ¨æŠ¥æ–‡çš„å¤´éƒ¨åé¢è·Ÿç€è¦å‘æœåŠ¡å™¨å‘é€çš„æ•°æ®
+        //è€Œå¯¹äºgetæ–¹æ³•ï¼Œå‘é€çš„å†…å®¹éƒ½åœ¨URLé‡Œé¢ï¼Œéƒ½åœ¨æŠ¥æ–‡å¤´éƒ¨ï¼Œä¸éœ€è¦å®šä¹‰åé¢çš„éƒ¨åˆ†ï¼Œå› æ­¤å†™å…¥é•¿åº¦å°±æ˜¯0
         esp_err_t err = esp_http_client_open(client, 0);
 
-        //Èç¹ûÁ¬½ÓÊ§°Ü
+        //å¦‚æœè¿æ¥å¤±è´¥
         if (err != ESP_OK)
         {
             ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
@@ -302,14 +302,14 @@ static void GetTask(void *pvParameters)
                 esp_restart();
             }
         }
-        //Èç¹ûÁ¬½Ó³É¹¦
+        //å¦‚æœè¿æ¥æˆåŠŸ
         else
         {
             errorTime = 0;
-            //¶ÁÈ¡Ä¿±êÖ÷»úµÄ·µ»ØÄÚÈİµÄĞ­ÒéÍ·
+            //è¯»å–ç›®æ ‡ä¸»æœºçš„è¿”å›å†…å®¹çš„åè®®å¤´
             content_length = esp_http_client_fetch_headers(client);
 
-            //Èç¹ûĞ­ÒéÍ·³¤¶ÈĞ¡ÓÚ0£¬ËµÃ÷Ã»ÓĞ³É¹¦¶ÁÈ¡µ½
+            //å¦‚æœåè®®å¤´é•¿åº¦å°äº0ï¼Œè¯´æ˜æ²¡æœ‰æˆåŠŸè¯»å–åˆ°
             if (content_length < 0)
             {
                 ESP_LOGE(TAG, "HTTP client fetch headers failed");
@@ -321,18 +321,18 @@ static void GetTask(void *pvParameters)
                 }
             }
 
-            //Èç¹û³É¹¦¶ÁÈ¡µ½ÁËĞ­ÒéÍ·
+            //å¦‚æœæˆåŠŸè¯»å–åˆ°äº†åè®®å¤´
             else
             {
 
-                //¶ÁÈ¡Ä¿±êÖ÷»úÍ¨¹ıhttpµÄÏìÓ¦ÄÚÈİ
+                //è¯»å–ç›®æ ‡ä¸»æœºé€šè¿‡httpçš„å“åº”å†…å®¹
                 int data_read = esp_http_client_read_response(client, output_buffer, MAX_HTTP_OUTPUT_BUFFER);
                 if (data_read >= 0)
                 {
-                    //´òÓ¡ÏìÓ¦ÄÚÈİ£¬°üÀ¨ÏìÓ¦×´Ì¬£¬ÏìÓ¦Ìå³¤¶È¼°ÆäÄÚÈİ
+                    //æ‰“å°å“åº”å†…å®¹ï¼ŒåŒ…æ‹¬å“åº”çŠ¶æ€ï¼Œå“åº”ä½“é•¿åº¦åŠå…¶å†…å®¹
                     ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d",
-                             esp_http_client_get_status_code(client),     //»ñÈ¡ÏìÓ¦×´Ì¬ĞÅÏ¢
-                             esp_http_client_get_content_length(client)); //»ñÈ¡ÏìÓ¦ĞÅÏ¢³¤¶È
+                             esp_http_client_get_status_code(client),     //è·å–å“åº”çŠ¶æ€ä¿¡æ¯
+                             esp_http_client_get_content_length(client)); //è·å–å“åº”ä¿¡æ¯é•¿åº¦
                     printf("data:%s\r\n", output_buffer);
                     //Analyse_Weather(output_buffer);
                     cJSON *root = NULL;
@@ -356,12 +356,37 @@ static void GetTask(void *pvParameters)
                             cJSON *dateTime = cJSON_GetObjectItem(reminderDateTime, "dateTime");
                             printf("UTC is:%s\r\n", dateTime->valuestring);
 
-                            //UTCÊ±¼ä´¦Àí
-
-
-
-                            if (strncmp(dateTime->valuestring, info.NowDate, 10) == 0)
+                            //UTCæ—¶é—´å¤„ç†
+                            char ChinaTime[100] = {0};
+                            strcpy(ChinaTime, dateTime->valuestring);
+                            int hour = (ChinaTime[11] - '0') * 10 + (ChinaTime[12] - '0');
+                            // ESP_LOGI(TAG, "UTCHour is:%d\r\n", hour);
+                            if (hour >= 16)
                             {
+                                hour = hour + 8 - 24;
+                                int day = (ChinaTime[8] - '0') * 10 + (ChinaTime[9] - '0');
+                                day += 1;
+                                ChinaTime[8] = day / 10 + '0';
+                                ChinaTime[9] = day % 10 + '0';
+                            }
+                            else
+                            {
+                                hour += 8;
+                            }
+                            // ESP_LOGI(TAG, "NowHour is:%d\r\n", hour);
+                            ChinaTime[11] = hour / 10 + '0';
+                            ChinaTime[12] = hour % 10 + '0';
+                            ESP_LOGI(TAG, "UTC+8 is:%s\r\n", ChinaTime);
+
+                            //TODO:å·²çŸ¥bugï¼Œå¯¹äºæ—¥çš„è¿›ä½ï¼Œæœˆçš„åˆ¤æ–­éƒ½æ²¡åš
+
+                            if (strncmp(ChinaTime, info.NowDate, 10) == 0)
+                            {
+                                cJSON *status = cJSON_GetObjectItem(CJSON_value, "status");
+                                if(strcmp(status->valuestring,"completed")==0)
+                                {
+                                    continue;
+                                }
                                 taskNum += 1;
                                 cJSON *title = cJSON_GetObjectItem(CJSON_value, "title");
                                 char a[100] = "";
@@ -369,7 +394,9 @@ static void GetTask(void *pvParameters)
                                 printf("Mission %s\r\n", a);
 
                                 char command[100] = "";
-                                sprintf(command, "task%d.txt=\"%s\"", taskNum, a);
+                                char time[100] = "";
+                                strncpy(time, ChinaTime + 11, 5);
+                                sprintf(command, "task%d.txt=\"%s %s\"", taskNum, a, time);
                                 uart_write_bytes(UART_NUM_1, command, strlen(command));
                                 uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
                             }
@@ -380,7 +407,7 @@ static void GetTask(void *pvParameters)
                             }
                         }
 
-                        //ÏÔÊ¾ÈÎÎñÍ¸Ã÷¶È
+                        //æ˜¾ç¤ºä»»åŠ¡é€æ˜åº¦
                         ESP_LOGI(TAG, "taskNum=%d", taskNum);
                         char command[100] = "";
                         if (taskNum >= 1)
@@ -409,7 +436,7 @@ static void GetTask(void *pvParameters)
                         uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
                     }
                 }
-                //Èç¹û²»³É¹¦
+                //å¦‚æœä¸æˆåŠŸ
                 else
                 {
                     ESP_LOGE(TAG, "Failed to read response");
@@ -431,7 +458,7 @@ void Sntp_init(void)
 
     ESP_LOGI(TAG, "------------Initializing SNTP");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, "cn.pool.ntp.org"); //ÉèÖÃ·ÃÎÊ·şÎñÆ÷	ÖĞ¹úÌá¹©ÉÌ
+    sntp_setservername(0, "cn.pool.ntp.org"); //è®¾ç½®è®¿é—®æœåŠ¡å™¨	ä¸­å›½æä¾›å•†
 
     sntp_init();
 }
@@ -465,13 +492,13 @@ GetTime:
     sprintf(info.NowDate, "%04d-%02d-%02d", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday);
     ESP_LOGI(TAG, "Today is: %s", info.NowDate);
 
-    sprintf(command, "t3.txt=\"%dÄê%02dÔÂ%02dÈÕ\"", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday);
+    sprintf(command, "t3.txt=\"%då¹´%02dæœˆ%02dæ—¥\"", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday);
     uart_write_bytes(UART_NUM_1, command, strlen(command));
     uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
 
-    if (timeinfo.tm_sec + 8 > 60)
+    if (timeinfo.tm_sec + 5 > 60)
     {
-        timeinfo.tm_sec += (8 - 60);
+        timeinfo.tm_sec = timeinfo.tm_sec + 5 - 60;
         if (timeinfo.tm_min == 59)
         {
             timeinfo.tm_min = 0;
@@ -482,7 +509,7 @@ GetTime:
     }
     else
     {
-        timeinfo.tm_sec += 8;
+        timeinfo.tm_sec += 5;
     }
     sprintf(command, "hour.val=%d", timeinfo.tm_hour);
     uart_write_bytes(UART_NUM_1, command, strlen(command));
