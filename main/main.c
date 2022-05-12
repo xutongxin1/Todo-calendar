@@ -2,7 +2,7 @@
  * @Author: xtx
  * @Date: 2022-05-09 23:14:36
  * @LastEditors: xtx
- * @LastEditTime: 2022-05-11 03:57:51
+ * @LastEditTime: 2022-05-11 21:58:59
  * @FilePath: /template-app/main/main.c
  * @Description: 请填写简介
  */
@@ -33,7 +33,6 @@
 #include "driver/uart.h"
 #include "esp_sntp.h"
 
-#include <string.h>
 #include "driver/ledc.h"
 #include "cJSON.h"
 
@@ -50,8 +49,13 @@ static const char *TAG = "xtxTest";
 
 static QueueHandle_t GetAeecssCode_queue;
 
-static char AccessCode[1024] = "";
-static char Today[100] = "";
+struct info
+{
+    char AccessCode[2048];
+
+    char NowDate[100];
+
+} info;
 
 static char output_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
 
@@ -70,26 +74,14 @@ void Uart_init(void)
     uart_driver_install(UART_NUM_1, BUF_SIZE * 2, 0, 0, NULL, 0);
     ESP_LOGI(TAG, "Uart1 Prepare in GPIO6_TX GPIO7_RX");
 
-    char test[100] = "t6.txt=\"今天天气是下雨呢QAQ\"";
+    // char test[100] = "t6.txt=\"今天天气是下雨呢QAQ\"";
     uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
-    uart_write_bytes(UART_NUM_1, test, strlen(test));
-    uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
-    uart_write_bytes(UART_NUM_1, test, strlen(test));
-    uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
+    // uart_write_bytes(UART_NUM_1, test, strlen(test));
+    // uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
+    // uart_write_bytes(UART_NUM_1, test, strlen(test));
+    // uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
 }
 
-void Analyse_Weather(char *output_buffer)
-{
-    cJSON *root = NULL;
-    root = cJSON_Parse(output_buffer);
-
-    cJSON *cjson_item = cJSON_GetObjectItem(root, "results");
-    cJSON *cjson_results = cJSON_GetArrayItem(cjson_item, 0);
-    cJSON *cjson_now = cJSON_GetObjectItem(cjson_results, "now");
-    cJSON *cjson_temperature = cJSON_GetObjectItem(cjson_now, "temperature");
-
-    printf("%s\n", cjson_temperature->valuestring);
-}
 static void GetAeecssCode(void *pvParameters)
 {
     esp_http_client_config_t config;
@@ -113,7 +105,7 @@ static void GetAeecssCode(void *pvParameters)
     int content_length = 0;
     const char *post_data = "grant_type=refresh_token&refresh_token=0.AUoAlUDjwqmsK0SfVWJW_EUggwjS333L5ChOpm5_9DAFFNNKAKs.AgABAAAAAAD--DLA3VO7QrddgJg7WevrAgDs_wQA9P9AVE_9wR05hdSZ11EaOPGkiE16kZJHPmVGp06DVKzFKuam2Fa71rpCUx4wa_hHWpnmM88Zu8y45wWj-5SCgI4owAh1k7xuvG0GD2jUBsCyQoa3XdKLiNWFjU28Gdn7mL-_-B0WtjLJ6m-hwnGWfM6DXQcgKrSiz7_r46l11KTAi6XKlh1eyi3F6U1D33ST5tvj3Tw70KFy1h6fg-mGg9iHdzXeCE0qpTyVB57I4sO5RegPu5X956QO8Jl_C5_DKJvD0KDJHfA2g2frCSCOX0RNTXjBsYsbEKJhgySeWYVPAVj3q-qMQfMH3Gh2uVqXMXKViV9eao-N7L19RVfldmsjPnE4f71IWrpMlTKxuahhBUcpjgasOolxQMkKc7oeCNh0Zom0jqtD84o9nFfMTjaiy8_9cMIgv6KQLG_wYmsITF91iK-PyrY4M_17TczGtzFmsVJRjQSwlKM0482_ZMVZMp4YVVqGbVA2DU_75tNUDDaImMtO7cEh5Y8YQnnQ4FM4gyUO5eTntgpnaNHQfMW6bZ7-ltPSOkautb1qYrj0qCi0dNyTDvVGAU7Vqy4vGwLWxsprXc_kFGm0gXO6IMgCJTrg1scyoYAkgfwZ9EqcwLRLFkZhSwryDft25qCAxGHrPSk7Dli_WmvcxfMLcAFh7XnHQ3OfPQvZzu0y7zsNtpn2HlO_MinvLK81MqvEBjttT2VFkilwsquuuHfF3lePqfx7GkNB6OhJ-V3kytSM7d46fLhPddOZ1KcSqUZtBcldjX4Lbn5V33Uh7OOSxpgBnvfxgLsCQdc5u_ajx_3R_S2rfv6Sgq6azlRbJYDsyHiwh2gcdvrcwDF9cGQe7svdCkGaz6_g4VV03pfpjsJMMNWflVgE3V1yIfRdPhkBxZnF4GAOVg&client_id=7ddfd208-e4cb-4e28-a66e-7ff4300514d3&client_secret=G~t8Q~wMLfVgx6jw1T3Z8POWIRLpNXxPxJVh5b5K&scope=https://graph.microsoft.com/.default offline_access&redirect_uri=https://oauth.pstmn.io/v1/callback";
     //esp_http_client_set_post_field(client, post_data, strlen(post_data));
-
+    int errorTime = 0;
     while (1)
     {
 
@@ -126,10 +118,17 @@ static void GetAeecssCode(void *pvParameters)
         if (err != ESP_OK)
         {
             ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
+            errorTime++;
+            if (errorTime == 10)
+            {
+                ESP_LOGE(TAG, "Error for 10 times!Rebot!");
+                esp_restart();
+            }
         }
         //如果连接成功
         else
         {
+            errorTime = 0;
             int wlen = esp_http_client_write(client, post_data, strlen(post_data));
             if (wlen < 0)
             {
@@ -155,7 +154,7 @@ static void GetAeecssCode(void *pvParameters)
                     cJSON *CJSON_access_token = cJSON_GetObjectItem(root, "access_token");
                     if (CJSON_access_token != NULL)
                     {
-                        strcpy(AccessCode, CJSON_access_token->valuestring);
+                        strcpy(info.AccessCode, CJSON_access_token->valuestring);
                         ESP_LOGI(TAG, "Get access code!");
                         // printf("AccessCode is:%s\r\n",AccessCode);
                         uint32_t res = 1;
@@ -175,14 +174,12 @@ static void GetAeecssCode(void *pvParameters)
     ESP_LOGI(TAG, "Delete the Task!");
     vTaskDelete(NULL);
 }
-/*static void GetTime(void *pvParameters)
+static void GetWeather(void *pvParameters)
 {
     esp_http_client_config_t config;
     memset(&config, 0, sizeof(config));
     //向配置结构体内部写入url
-    config.buffer_size_tx = 4096;
-    config.buffer_size = 2048;
-    static const char *URL = "https://graph.microsoft.com/v1.0/me/todo/lists/AQMkAGFmYjhjNWNiLTA0YmMtNGZiZC05ZGMxLTMwM2I1ODNkMWE5YwAuAAADuNMsdt9ULkG68AWXdu9SlgEAzPKXK_YW5UibTHO5BXCzowAAAgESAAAA/tasks";
+    static const char *URL = "https://api.seniverse.com/v3/weather/now.json?key=Suo-L-0OoOH2-YLPj&location=beijing&language=zh-Hans&unit=c";
     config.url = URL;
 
     //初始化结构体
@@ -234,18 +231,25 @@ static void GetAeecssCode(void *pvParameters)
                     printf("data:%s\r\n", output_buffer);
                     cJSON *root = NULL;
                     root = cJSON_Parse(output_buffer);
-                    cJSON *error = cJSON_GetObjectItem(CJSON_value, "error");
-                    if (error != NULL)
+
+                    cJSON *cjson_item = cJSON_GetObjectItem(root, "results");
+
+                    if (cjson_item != NULL)
                     {
-                        cJSON *innerError = cJSON_GetObjectItem(CJSON_value, "innerError");
-                        cJSON *date = cJSON_GetObjectItem(CJSON_value, "date");
-                        char a[100] = "";
-                        sprintf(a, "%s", date->valuestring);
-                        printf("%s\r\n", a);
-                        char DateCommand[100];
-                        if()
-                        int count = uart_write_bytes(UART_NUM_1, test, strlen(test));
+                        cJSON *cjson_results = cJSON_GetArrayItem(cjson_item, 0);
+                        cJSON *cjson_now = cJSON_GetObjectItem(cjson_results, "now");
+                        cJSON *cjson_temperature = cJSON_GetObjectItem(cjson_now, "temperature");
+                        cJSON *cjson_weather = cJSON_GetObjectItem(cjson_now, "text");
+                        // printf("%s\n", cjson_weather->valuestring);
+                        //if(text)
+                        char command[100] = "";
+                        sprintf(command, "t6.txt=\"今天天气是%s呢\n气温是%s度撒\"", cjson_weather->valuestring, cjson_temperature->valuestring);
+                        uart_write_bytes(UART_NUM_1, command, strlen(command));
                         uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
+
+                        uint32_t res = 1;
+                        xQueueSend(GetAeecssCode_queue, (void *)&res, (TickType_t)10);
+                        break;
                     }
                 }
                 //如果不成功
@@ -258,8 +262,9 @@ static void GetAeecssCode(void *pvParameters)
         ESP_LOGI(TAG, "End This Post");
         vTaskDelay(6000 / portTICK_PERIOD_MS);
     }
-}*/
-static void http_post_task(void *pvParameters)
+    vTaskDelete(NULL);
+}
+static void GetTask(void *pvParameters)
 {
     esp_http_client_config_t config;
     memset(&config, 0, sizeof(config));
@@ -274,9 +279,10 @@ static void http_post_task(void *pvParameters)
 
     //设置发送请求
     esp_http_client_set_method(client, HTTP_METHOD_GET);
-    esp_http_client_set_header(client, "Authorization", AccessCode);
+    esp_http_client_set_header(client, "Authorization", info.AccessCode);
     char output_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
     int content_length = 0;
+    int errorTime = 0;
     while (1)
     {
 
@@ -289,11 +295,17 @@ static void http_post_task(void *pvParameters)
         if (err != ESP_OK)
         {
             ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
+            errorTime++;
+            if (errorTime == 10)
+            {
+                ESP_LOGE(TAG, "Error for 10 times!Rebot!");
+                esp_restart();
+            }
         }
         //如果连接成功
         else
         {
-
+            errorTime = 0;
             //读取目标主机的返回内容的协议头
             content_length = esp_http_client_fetch_headers(client);
 
@@ -301,6 +313,12 @@ static void http_post_task(void *pvParameters)
             if (content_length < 0)
             {
                 ESP_LOGE(TAG, "HTTP client fetch headers failed");
+                errorTime++;
+                if (errorTime == 10)
+                {
+                    ESP_LOGE(TAG, "Error for 10 times!Rebot!");
+                    esp_restart();
+                }
             }
 
             //如果成功读取到了协议头
@@ -311,7 +329,6 @@ static void http_post_task(void *pvParameters)
                 int data_read = esp_http_client_read_response(client, output_buffer, MAX_HTTP_OUTPUT_BUFFER);
                 if (data_read >= 0)
                 {
-
                     //打印响应内容，包括响应状态，响应体长度及其内容
                     ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d",
                              esp_http_client_get_status_code(client),     //获取响应状态信息
@@ -323,17 +340,85 @@ static void http_post_task(void *pvParameters)
                     cJSON *CJSON_value_array = cJSON_GetObjectItem(root, "value");
                     if (CJSON_value_array != NULL)
                     {
-                        cJSON *CJSON_value = cJSON_GetArrayItem(CJSON_value_array, 0);
-                        cJSON *title = cJSON_GetObjectItem(CJSON_value, "title");
-                        char a[100] = "";
-                        sprintf(a, "%s", title->valuestring);
-                        printf("%s\r\n", a);
+                        int taskNum = 0;
+                        int num = cJSON_GetArraySize(CJSON_value_array);
+                        for (int i = 0; i < num; i++)
+                        {
+                            if (taskNum == 4)
+                                break;
+                            cJSON *CJSON_value = cJSON_GetArrayItem(CJSON_value_array, i);
+                            cJSON *reminderDateTime = cJSON_GetObjectItem(CJSON_value, "reminderDateTime");
+                            if (reminderDateTime == NULL)
+                            {
+                                ESP_LOGI(TAG, "No reminderDateTime");
+                                continue;
+                            }
+                            cJSON *dateTime = cJSON_GetObjectItem(reminderDateTime, "dateTime");
+                            printf("UTC is:%s\r\n", dateTime->valuestring);
+
+                            //UTC时间处理
+
+
+
+                            if (strncmp(dateTime->valuestring, info.NowDate, 10) == 0)
+                            {
+                                taskNum += 1;
+                                cJSON *title = cJSON_GetObjectItem(CJSON_value, "title");
+                                char a[100] = "";
+                                sprintf(a, "%s", title->valuestring);
+                                printf("Mission %s\r\n", a);
+
+                                char command[100] = "";
+                                sprintf(command, "task%d.txt=\"%s\"", taskNum, a);
+                                uart_write_bytes(UART_NUM_1, command, strlen(command));
+                                uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
+                            }
+                            else
+                            {
+                                ESP_LOGI(TAG, "No =");
+                                printf("Today is:%s\r\n", info.NowDate);
+                            }
+                        }
+
+                        //显示任务透明度
+                        ESP_LOGI(TAG, "taskNum=%d", taskNum);
+                        char command[100] = "";
+                        if (taskNum >= 1)
+                        {
+                            sprintf(command, "task1.aph=90");
+                        }
+                        else
+                            sprintf(command, "task1.aph=0");
+                        uart_write_bytes(UART_NUM_1, command, strlen(command));
+                        uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
+                        if (taskNum >= 2)
+                        {
+                            sprintf(command, "task2.aph=90");
+                        }
+                        else
+                            sprintf(command, "task2.aph=0");
+                        uart_write_bytes(UART_NUM_1, command, strlen(command));
+                        uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
+                        if (taskNum >= 3)
+                        {
+                            sprintf(command, "task3.aph=90");
+                        }
+                        else
+                            sprintf(command, "task3.aph=0");
+                        uart_write_bytes(UART_NUM_1, command, strlen(command));
+                        uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
                     }
                 }
                 //如果不成功
                 else
                 {
                     ESP_LOGE(TAG, "Failed to read response");
+                    errorTime++;
+                    if (errorTime == 10)
+                    {
+                        ESP_LOGE(TAG, "Error for 10 times!Rebot!");
+                        esp_restart();
+                    }
                 }
             }
         }
@@ -349,7 +434,6 @@ void Sntp_init(void)
     sntp_setservername(0, "cn.pool.ntp.org"); //设置访问服务器	中国提供商
 
     sntp_init();
-    
 }
 
 void stopSNTP(void)
@@ -364,12 +448,12 @@ struct tm getNowTime(void)
     setenv("TZ", "CST-8", 1);
     tzset();
 
-    GetTime:
+GetTime:
 
     time(&now);
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    if(timeinfo.tm_year==70)
+    if (timeinfo.tm_year == 70)
     {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         ESP_LOGE(TAG, "Get Time Error!");
@@ -378,34 +462,38 @@ struct tm getNowTime(void)
     ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
     char command[100] = "";
 
-    sprintf(Today,"%04d-%02d-%02d\"",timeinfo.tm_year+1900,timeinfo.tm_mon+1,timeinfo.tm_mday);
-    ESP_LOGI(TAG, "Today is: %s", Today);
+    sprintf(info.NowDate, "%04d-%02d-%02d", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday);
+    ESP_LOGI(TAG, "Today is: %s", info.NowDate);
 
-    sprintf(command,"t3.txt=\"%d年%02d月%02d日\"",timeinfo.tm_year+1900,timeinfo.tm_mon+1,timeinfo.tm_mday);
+    sprintf(command, "t3.txt=\"%d年%02d月%02d日\"", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday);
     uart_write_bytes(UART_NUM_1, command, strlen(command));
     uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
-    
-    if(timeinfo.tm_sec+8>60)
+
+    if (timeinfo.tm_sec + 8 > 60)
     {
-        timeinfo.tm_sec+=(8-60);
-        if(timeinfo.tm_min==59)
+        timeinfo.tm_sec += (8 - 60);
+        if (timeinfo.tm_min == 59)
         {
-            timeinfo.tm_min=0;
-            timeinfo.tm_hour+=1;
+            timeinfo.tm_min = 0;
+            timeinfo.tm_hour += 1;
         }
-        else timeinfo.tm_min+=1;
+        else
+            timeinfo.tm_min += 1;
     }
-    else timeinfo.tm_sec+=8;
-    sprintf(command,"hour.val=%d",timeinfo.tm_hour);
+    else
+    {
+        timeinfo.tm_sec += 8;
+    }
+    sprintf(command, "hour.val=%d", timeinfo.tm_hour);
     uart_write_bytes(UART_NUM_1, command, strlen(command));
     uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
-    sprintf(command,"min.val=%d",timeinfo.tm_min);
+    sprintf(command, "min.val=%d", timeinfo.tm_min);
     uart_write_bytes(UART_NUM_1, command, strlen(command));
     uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
-    sprintf(command,"sec.val=%d",timeinfo.tm_sec);
+    sprintf(command, "sec.val=%d", timeinfo.tm_sec);
     uart_write_bytes(UART_NUM_1, command, strlen(command));
     uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
-    sprintf(command,"tm0.en=1");
+    sprintf(command, "tm0.en=1");
     uart_write_bytes(UART_NUM_1, command, strlen(command));
     uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
     return timeinfo;
@@ -431,6 +519,7 @@ void app_main(void)
     getNowTime();
     stopSNTP();
 
+    GetAeecssCode_queue = xQueueCreate(10, sizeof(uint32_t));
     xTaskCreate(&GetWeather, "GetWeather", 16384, NULL, 5, NULL);
     uint32_t result = 0;
     while (1)
@@ -438,11 +527,10 @@ void app_main(void)
 
         if (xQueueReceive(GetAeecssCode_queue, &result, (portTickType)portMAX_DELAY))
         {
-            ESP_LOGI(TAG, "Get Access Code");
+            ESP_LOGI(TAG, "Get Weather!");
             break;
         }
     }
-
 
     xTaskCreate(&GetAeecssCode, "GetAeecssCode", 16384, NULL, 5, NULL);
     while (1)
@@ -454,5 +542,10 @@ void app_main(void)
             break;
         }
     }
-    xTaskCreate(&http_post_task, "http_post_task", 16384, NULL, 5, NULL);
+
+    printf("AccessCode is:%s\r\n", info.AccessCode);
+    printf("Today is:%s\r\n", info.NowDate);
+    // ESP_LOGI(TAG, "%x\n",&AccessCode[0]);
+    // ESP_LOGI(TAG, "%x\n",&dateTime[0]);
+    xTaskCreate(&GetTask, "GetTask", 16384, NULL, 5, NULL);
 }
