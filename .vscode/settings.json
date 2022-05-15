@@ -12,7 +12,8 @@
     "chrono": "c",
     "algorithm": "c",
     "ratio": "c",
-    "random": "c"
+    "random": "c",
+    "regex": "c"
   },
   "idf.flashType": "UART",
   "idf.port": "/dev/ttyUSB0",

@@ -2,7 +2,7 @@
  * @Author: xtx
  * @Date: 2022-05-09 23:14:36
  * @LastEditors: xtx
- * @LastEditTime: 2022-05-12 03:31:25
+ * @LastEditTime: 2022-05-15 01:51:57
  * @FilePath: /template-app/main/main.c
  * @Description: 请填写简介
  */
@@ -65,7 +65,7 @@ struct info
 struct taskInfo
 {
     u8 state;
-    char id[1024];
+    char id[2048];
     u8 isNeedFinish;
 } taskInfo[4];
 
@@ -83,8 +83,7 @@ void Uart_init(void)
     };
     uart_param_config(UART_NUM_1, &uart_config);
     uart_set_pin(UART_NUM_1, 6, 7, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-    // uart_driver_install(UART_NUM_1, BUF_SIZE * 2, 0, 0, NULL, 0);
-    uart_driver_install(UART_NUM_1, BUF_SIZE * 2, BUF_SIZE * 2, 20, &uart1_queue, 0);
+    uart_driver_install(UART_NUM_1, BUF_SIZE * 2, 0, 0, NULL, 0);
     ESP_LOGI(TAG, "Uart1 Prepare in GPIO6_TX GPIO7_RX");
 
     // char test[100] = "t6.txt=\"今天天气是下雨呢QAQ\"";
@@ -94,106 +93,42 @@ void Uart_init(void)
     // uart_write_bytes(UART_NUM_1, test, strlen(test));
     // uart_write_bytes(UART_NUM_1, "\xff\xff\xff", 3);
 }
-static void uart_analyse(char *dtmp)
+static void uart_analyse(char *data)
 {
-    for (int i = 0; i < strlen((const char *)dtmp); i++)
+    ESP_LOGI(TAG, "Analyse");
+    int taskNum = data[4] - '0';
+    printf("%d  %d \n", taskNum, taskInfo[taskNum].state);
+    if (taskInfo[taskNum].state == 1)
     {
-        data_recv[cnt++] = dtmp[i];
-        if (data_recv[cnt - 1] == '@')
-        {
-
-            int taskNum = data_recv[4] - '0';
-            if (taskInfo[taskNum].state == 1)
-            {
-                taskInfo[taskNum].isNeedFinish = 1;
-                ESP_LOGI(TAG, "Want to finish %s task", data_recv);
-            }
-            cnt = 0;
-            memset(data_recv, 0, sizeof(data_recv));
-        }
+        taskInfo[taskNum].isNeedFinish = 1;
+        ESP_LOGI(TAG, "Want to finish %d task", taskNum);
     }
+    cnt = 0;
+    memset(data_recv, 0, sizeof(data_recv));
 }
 static void uart_event_task(void *pvParameters)
 {
-    uart_event_t event;
-    size_t buffered_size;
-    uint8_t* dtmp = (uint8_t*) malloc(RD_BUF_SIZE);
-    for(;;) {
-        //Waiting for UART event.
-        if(xQueueReceive(uart1_queue, (void * )&event, (portTickType)portMAX_DELAY)) {
-            bzero(dtmp, RD_BUF_SIZE);
-            ESP_LOGI(TAG, "uart[%d] event:", EX_UART_NUM);
-            switch(event.type) {
-                //Event of UART receving data
-                /*We'd better handler data event fast, there would be much more data events than
-                other types of events. If we take too much time on data event, the queue might
-                be full.*/
-                case UART_DATA:
-                    ESP_LOGI(TAG, "[UART DATA]: %d", event.size);
-                    uart_read_bytes(EX_UART_NUM, dtmp, event.size, portMAX_DELAY);
-                    ESP_LOGI(TAG, "[DATA EVT]:");
-                    uart_write_bytes(EX_UART_NUM, (const char*) dtmp, event.size);
-                    break;
-                //Event of HW FIFO overflow detected
-                case UART_FIFO_OVF:
-                    ESP_LOGI(TAG, "hw fifo overflow");
-                    // If fifo overflow happened, you should consider adding flow control for your application.
-                    // The ISR has already reset the rx FIFO,
-                    // As an example, we directly flush the rx buffer here in order to read more data.
-                    uart_flush_input(EX_UART_NUM);
-                    xQueueReset(uart1_queue);
-                    break;
-                //Event of UART ring buffer full
-                case UART_BUFFER_FULL:
-                    ESP_LOGI(TAG, "ring buffer full");
-                    // If buffer full happened, you should consider encreasing your buffer size
-                    // As an example, we directly flush the rx buffer here in order to read more data.
-                    uart_flush_input(EX_UART_NUM);
-                    xQueueReset(uart1_queue);
-                    break;
-                //Event of UART RX break detected
-                case UART_BREAK:
-                    ESP_LOGI(TAG, "uart rx break");
-                    break;
-                //Event of UART parity check error
-                case UART_PARITY_ERR:
-                    ESP_LOGI(TAG, "uart parity error");
-                    break;
-                //Event of UART frame error
-                case UART_FRAME_ERR:
-                    ESP_LOGI(TAG, "uart frame error");
-                    break;
-                //UART_PATTERN_DET
-                case UART_PATTERN_DET:
-                    uart_get_buffered_data_len(EX_UART_NUM, &buffered_size);
-                    int pos = uart_pattern_pop_pos(EX_UART_NUM);
-                    ESP_LOGI(TAG, "[UART PATTERN DETECTED] pos: %d, buffered size: %d", pos, buffered_size);
-                    if (pos == -1) {
-                        // There used to be a UART_PATTERN_DET event, but the pattern position queue is full so that it can not
-                        // record the position. We should set a larger queue size.
-                        // As an example, we directly flush the rx buffer here.
-                        uart_flush_input(EX_UART_NUM);
-                    } else {
-                        uart_read_bytes(EX_UART_NUM, dtmp, pos, 100 / portTICK_PERIOD_MS);
-                        uint8_t pat[PATTERN_CHR_NUM + 1];
-                        memset(pat, 0, sizeof(pat));
-                        uart_read_bytes(EX_UART_NUM, pat, PATTERN_CHR_NUM, 100 / portTICK_PERIOD_MS);
-                        ESP_LOGI(TAG, "read data: %s", dtmp);
-                        ESP_LOGI(TAG, "read pat : %s", pat);
-                    }
-                    break;
-                //Others
-                default:
-                    ESP_LOGI(TAG, "uart event type: %d", event.type);
-                    break;
-            }
+    char data[128] = "";
+    int length = 0;
+    esp_err_t err;
+    while (1)
+    {
+        err = uart_get_buffered_data_len(UART_NUM_1, (size_t *)&length);
+        if (length > 0 && err == ESP_OK)
+        {
+            memset(data, 0, 128);
+            length = uart_read_bytes(UART_NUM_1, data, length, 100);
+            printf("%s\n", data);
+            printf("%c %c %c\n", data[3], data[4], data[5]);
+            if (data[5] == '@')
+                uart_analyse(data);
+
+            //uart_write_bytes(UART_NUM_1, data, length);
         }
+        vTaskDelay(10); //Delay 10ms
     }
-    free(dtmp);
-    dtmp = NULL;
     vTaskDelete(NULL);
 }
-
 
 static void GetAeecssCode(void *pvParameters)
 {
@@ -377,11 +312,11 @@ static void GetWeather(void *pvParameters)
     }
     vTaskDelete(NULL);
 }
-static void FinishTask(void *pvParameters)
+static void FinishTask(int TaskNum)
 {
-    int *tmp;
-    tmp = (int *)pvParameters;
-    int TaskNum = *tmp;
+    // int *tmp;
+    // tmp = (int *)pvParameters;
+    // int TaskNum = *tmp;
     esp_http_client_config_t config;
     memset(&config, 0, sizeof(config));
     //向配置结构体内部写入url
@@ -427,7 +362,11 @@ static void FinishTask(void *pvParameters)
         //如果连接成功
         else
         {
-
+            int wlen = esp_http_client_write(client, post_data, strlen(post_data));
+            if (wlen < 0)
+            {
+                ESP_LOGE(TAG, "Write failed");
+            }
             //读取目标主机的返回内容的协议头
             content_length = esp_http_client_fetch_headers(client);
 
@@ -446,16 +385,12 @@ static void FinishTask(void *pvParameters)
             //如果成功读取到了协议头
             else
             {
-                int wlen = esp_http_client_write(client, post_data, strlen(post_data));
-                if (wlen < 0)
-                {
-                    ESP_LOGE(TAG, "Write failed");
-                }
                 //读取目标主机通过http的响应内容
                 int data_read = esp_http_client_read_response(client, output_buffer, MAX_HTTP_OUTPUT_BUFFER);
                 if (data_read >= 0)
                 {
                     errorTime = 0;
+                    ESP_LOGI(TAG,"Want to finish");
                     //打印响应内容，包括响应状态，响应体长度及其内容
                     ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d",
                              esp_http_client_get_status_code(client),     //获取响应状态信息
@@ -470,6 +405,9 @@ static void FinishTask(void *pvParameters)
 
                         taskInfo[TaskNum].state = 0;
                         taskInfo[TaskNum].isNeedFinish = 0;
+
+                        uint32_t res = 1;
+                        xQueueSend(GetAeecssCode_queue, (void *)&res, (TickType_t)10);
                         break;
                     }
                 }
@@ -637,6 +575,7 @@ static void GetTask(void *pvParameters)
                                 cJSON *id = cJSON_GetObjectItem(CJSON_value, "id");
                                 taskInfo[taskNum].state = 1;
                                 strcpy(taskInfo[taskNum].id, id->valuestring);
+                                printf("taskNum %d on,is %d\n", taskNum, taskInfo[taskNum].state);
 
                                 cJSON *title = cJSON_GetObjectItem(CJSON_value, "title");
                                 char a[100] = "";
